@@ -1,0 +1,296 @@
+openapi: 3.0.1
+info:
+  title: Product Service API
+  version: 1.0.0
+  description: API for managing bank products: accounts, credits, and credit cards
+ 
+servers:
+  - url: http://localhost:8082
+    description: Local development server
+ 
+paths:
+  /accounts:
+    get:
+      summary: Get all bank accounts
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BankAccount'
+    post:
+      summary: Create new bank account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccount'
+      responses:
+        '201':
+          description: Account created
+ 
+  /accounts/{id}:
+    get:
+      summary: Get account by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccount'
+        '404':
+          description: Account not found
+ 
+    put:
+      summary: Update account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccount'
+      responses:
+        '200':
+          description: Account updated
+ 
+    delete:
+      summary: Delete account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Account deleted
+ 
+  /credits:
+    get:
+      summary: Get all credits
+      responses:
+        '200':
+          description: List of credits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Credit'
+    post:
+      summary: Create a credit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credit'
+      responses:
+        '201':
+          description: Credit created
+ 
+  /credits/{id}:
+    get:
+      summary: Get credit by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Credit found
+        '404':
+          description: Credit not found
+ 
+    put:
+      summary: Update credit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credit'
+      responses:
+        '200':
+          description: Credit updated
+ 
+    delete:
+      summary: Delete credit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Credit deleted
+ 
+  /credit-cards:
+    get:
+      summary: Get all credit cards
+      responses:
+        '200':
+          description: List of credit cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditCard'
+    post:
+      summary: Create a credit card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCard'
+      responses:
+        '201':
+          description: Credit card created
+ 
+  /credit-cards/{id}:
+    get:
+      summary: Get credit card by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Credit card found
+        '404':
+          description: Credit card not found
+ 
+    put:
+      summary: Update credit card
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCard'
+      responses:
+        '200':
+          description: Credit card updated
+ 
+    delete:
+      summary: Delete credit card
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Credit card deleted
+ 
+components:
+  schemas:
+    BankAccount:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        accountType:
+          type: string
+          enum: [SAVINGS, CURRENT, FIXED_TERM]
+        balance:
+          type: number
+          format: double
+        holders:
+          type: array
+          items:
+            type: string
+        authorizedSigners:
+          type: array
+          items:
+            type: string
+        allowedMovementDate:
+          type: string
+          format: date
+        maxMonthlyMovements:
+          type: integer
+        maintenanceFee:
+          type: number
+          format: double
+ 
+    Credit:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        type:
+          type: string
+          enum: [PERSONAL, BUSINESS]
+        totalAmount:
+          type: number
+          format: double
+        paidAmount:
+          type: number
+          format: double
+        status:
+          type: string
+ 
+    CreditCard:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        type:
+          type: string
+          enum: [PERSONAL, BUSINESS]
+        cardNumber:
+          type: string
+        expirationDate:
+          type: string
+        cvv:
+          type: string
+        nameOnCard:
+          type: string
+        creditLimit:
+          type: number
+          format: double
+        usedAmount:
+          type: number
+          format: double
+        status:
+          type: string

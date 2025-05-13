@@ -1,0 +1,169 @@
+openapi: 3.0.1
+info:
+  title: Customer Service API
+  version: 1.0.0
+  description: API para manejo de clientes persona y clientes bancarios
+
+servers:
+  - url: http://localhost:8081
+    description: Local dev servers
+
+paths:
+  /customers:
+    get:
+      summary: Get all customers
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+    
+    post:
+      summary: Create a new customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+            example: 
+              name: "Alice Smith"
+              dni: "12345678"
+              type: "PERSONAL"
+      responses:
+      '201':
+        description: Customer created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+      '400':
+        description: Invalid input
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+
+  /customers/{id}:  # Endpoint con path variable para operar sobre un cliente específico
+    get:
+      summary: Get a customer by ID
+      parameters:
+        - name: id
+          in: path  # El parámetro "id" viene de la URL
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update a customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '200':
+          description: Customer updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+
+    delete:
+      summary: Delete a customer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Customer deleted successfully  # No se devuelve contenido (código 204)
+
+components:
+  schemas:
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "a1b2c3d4"
+        name:
+          type: string
+          example: "Alice Smith"
+        documentNumber:
+          type: string
+          example: "12345678"
+        type:
+          type: string
+          enum: [PERSONAL, BUSINESS]
+          example: "PERSONAL"
+        holders:
+          type: array
+          items:
+            type: string
+          description: Only for BUSINESS customers
+        signers:
+          type: array
+          items:
+            type: string
+          description: Only for BUSINESS customers
+    CustomerRequest:
+      type: object
+      required: [name, documentNumber, type]  # Campos obligatorios al crear un cliente
+      properties:
+        name:
+          type: string
+          minLength: 2
+        documentNumber:
+          type: string
+          pattern: '^[0-9]{8,12}$'
+        type:
+          type: string
+          enum: [PERSONAL, BUSINESS]
+        holders:
+          type: array
+          items:
+            type: string
+        signers:
+          type: array
+          items:
+            type: string
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string

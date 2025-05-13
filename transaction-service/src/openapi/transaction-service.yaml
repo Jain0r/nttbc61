@@ -1,0 +1,105 @@
+openapi: 3.0.1
+info:
+  title: Transaction & Balance Service API
+  version: 1.0.0
+  description: Handles operations like deposits, withdrawals, payments, and balance queries
+ 
+servers:
+  - url: http://localhost:8083
+    description: Local development server
+ 
+paths:
+  /transactions:
+    get:
+      summary: Get all transactions
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+    post:
+      summary: Register a new transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+      responses:
+        '201':
+          description: Transaction registered
+ 
+  /transactions/by-product/{productId}:
+    get:
+      summary: Get transactions by product ID
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transactions for given product
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+ 
+  /transactions/balance/{productId}:
+    get:
+      summary: Get calculated balance of a product
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calculated balance
+          content:
+            application/json:
+              schema:
+                type: number
+                format: double
+ 
+  /transactions/{id}:
+    delete:
+      summary: Delete a transaction by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted successfully
+ 
+components:
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        type:
+          type: string
+          enum: [DEPOSIT, WITHDRAWAL, PAYMENT, CHARGE]
+        amount:
+          type: number
+          format: double
+        date:
+          type: string
+          format: date-time
+        description:
+          type: string
