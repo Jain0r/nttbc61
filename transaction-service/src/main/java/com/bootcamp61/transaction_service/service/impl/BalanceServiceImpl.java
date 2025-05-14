@@ -21,11 +21,18 @@ public class BalanceServiceImpl implements BalanceService{
         return repository.findByProductId(productId)
                          .map(transaction -> {
                             if (transaction.getType() == null || transaction.getAmount() == null) return BigDecimal.ZERO;
-                            return switch (transaction.getType()){
-                                case DEPOSIT, PAYMENT -> transaction.getAmount();
-                                case WITHDRAWAL, CHARGE -> transaction.getAmount().negate();
-                            };
-                        }).reduce(BigDecimal.ZERO, BigDecimal::add);
+                            switch (transaction.getType()) {
+                                case DEPOSIT:
+                                case PAYMENT:
+                                    return transaction.getAmount();
+                                case WITHDRAWAL:
+                                case CHARGE:
+                                    return transaction.getAmount().negate();
+                                default:
+                                    return BigDecimal.ZERO;
+                            }
+                        })
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
     
 }
