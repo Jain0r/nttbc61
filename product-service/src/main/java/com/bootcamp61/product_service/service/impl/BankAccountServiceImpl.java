@@ -1,8 +1,9 @@
 package com.bootcamp61.product_service.service.impl;
 
-import org.apache.kafka.common.acl.AclOperation;
 import org.springframework.stereotype.Service;
 
+import com.bootcamp61.product_service.event.ProductCreatedEvent;
+import com.bootcamp61.product_service.event.ProductEventPublisher;
 import com.bootcamp61.product_service.listener.CustomerEventListener;
 import com.bootcamp61.product_service.model.AccountType;
 import com.bootcamp61.product_service.model.BankAccount;
@@ -20,6 +21,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     private final BankAccountRepository repository;
 
+    private final ProductEventPublisher productEventPublisher;
     @Override
     public Flux<BankAccount> findAll() {
         return repository.findAll();
@@ -58,11 +60,11 @@ public class BankAccountServiceImpl implements BankAccountService {
                                 if(exists){
                                     return Mono.error(new IllegalStateException("Cliente personal solo puede tener una cuenta por tipo"));
                                 } else {
-                                    return repository.save(account);
+                                    return repository.save(account).doOnSuccess(saved -> publishProductEvent(saved));
                                 }
                              });
         }
-        return repository.save(account);
+        return repository.save(account).doOnSuccess(saved -> publishProductEvent(saved));
     }
 
     @Override
@@ -85,4 +87,16 @@ public class BankAccountServiceImpl implements BankAccountService {
         return repository.deleteById(id);
     }
     
+    private void publishProductEvent(BankAccount saved) {
+    String allowedDate = saved.getAllowedMovementDate() != null
+            ? saved.getAllowedMovementDate().toString()
+            : null;
+
+    productEventPublisher.publish(ProductCreatedEvent.builder()
+            .productId(saved.getId())
+            .productType(saved.getAccountType().name())
+            .allowedMovementDate(allowedDate)
+            .build());
+}
+
 }

@@ -2,7 +2,11 @@ package com.bootcamp61.product_service.service.impl;
 
 import org.springframework.stereotype.Service;
 
+import com.bootcamp61.product_service.event.ProductCreatedEvent;
+import com.bootcamp61.product_service.event.ProductEventPublisher;
+import com.bootcamp61.product_service.listener.CustomerEventListener;
 import com.bootcamp61.product_service.model.CreditCard;
+import com.bootcamp61.product_service.model.CustomerType;
 import com.bootcamp61.product_service.repository.CreditCardRepository;
 import com.bootcamp61.product_service.service.CreditCardService;
 
@@ -15,6 +19,8 @@ import reactor.core.publisher.Mono;
 public class CreditCardServiceImpl implements CreditCardService{
 
     private final CreditCardRepository repository;
+
+    private final ProductEventPublisher productEventPublisher;
 
     @Override
     public Flux<CreditCard> findAll() {
@@ -32,8 +38,20 @@ public class CreditCardServiceImpl implements CreditCardService{
     }
 
     @Override
-    public Mono<CreditCard> create(CreditCard creditCard) {
-        return repository.save(creditCard);
+    public Mono<CreditCard> create(CreditCard card) {
+        CustomerType type = CustomerEventListener.customerTypeMap.get(card.getCustomerId());
+
+        if (type == null) {
+            return Mono.error(new IllegalStateException("Tipo de cliente no disponible para ID: " + card.getCustomerId()));
+        }
+
+        if (card.getUsedAmount() != null && card.getCreditLimit() != null &&
+            card.getUsedAmount().compareTo(card.getCreditLimit()) > 0) {
+            return Mono.error(new IllegalStateException("El monto usado no puede exceder el límite de crédito"));
+        }
+
+        return repository.save(card)
+            .doOnSuccess(this::publishProductEvent);
     }
 
     @Override
@@ -57,4 +75,11 @@ public class CreditCardServiceImpl implements CreditCardService{
         return repository.deleteById(id);
     }
     
+    private void publishProductEvent(CreditCard saved) {
+        productEventPublisher.publish(ProductCreatedEvent.builder()
+                .productId(saved.getId())
+                .productType("CREDIT_CARD")
+                .allowedMovementDate(null)
+                .build());
+    }
 }
