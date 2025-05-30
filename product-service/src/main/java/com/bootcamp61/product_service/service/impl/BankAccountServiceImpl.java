@@ -40,31 +40,32 @@ public class BankAccountServiceImpl implements BankAccountService {
     @Override
     public Mono<BankAccount> create(BankAccount account) {
         CustomerType type = CustomerEventListener.customerTypeMap.get(account.getCustomerId());
-
-        if(type == null)
-            return Mono.error(new IllegalStateException("Tipo cliente no disponible"));
+        // CustomerType type = CustomerType.PERSONAL;
+        // if(type == null)
+        //     return Mono.error(new IllegalStateException("Tipo cliente no disponible"));
         
-        AccountType newType = account.getAccountType();
+        AccountType accountType = account.getAccountType();
 
         //business no ahorro ni plazo fijo
-        if(type == CustomerType.BUSINESS && newType == AccountType.SAVINGS || newType == AccountType.FIXED_TERM){
+        if(type == CustomerType.BUSINESS && accountType == AccountType.SAVINGS || accountType == AccountType.FIXED_TERM){
             return Mono.error(new IllegalStateException("Tipo de cuenta no permitido para cliente BUSINESS"));
         }
 
         //cliente persona solo 1 cuenta ppor tipo
         if(type == CustomerType.PERSONAL){
             return repository.findByCustomerId(account.getCustomerId())
-                             .filter(existing -> existing.getAccountType() == newType)
+                             .filter(existing -> existing.getAccountType() == accountType)
+                             .doOnNext(existing -> System.out.println("Elemento encontrado:"  + existing.getCustomerId()))
                              .hasElements()
                              .flatMap(exists -> {
                                 if(exists){
                                     return Mono.error(new IllegalStateException("Cliente personal solo puede tener una cuenta por tipo"));
                                 } else {
-                                    return repository.save(account).doOnSuccess(saved -> publishProductEvent(saved));
+                                    return repository.save(account);//.doOnSuccess(saved -> publishProductEvent(saved));
                                 }
                              });
         }
-        return repository.save(account).doOnSuccess(saved -> publishProductEvent(saved));
+        return repository.save(account);//.doOnSuccess(saved -> publishProductEvent(saved));
     }
 
     @Override

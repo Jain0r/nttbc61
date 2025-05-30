@@ -78,13 +78,13 @@ public class TransactionServiceImpl implements TransactionService {
                     LocalDate today = LocalDate.now();
                     LocalDate allowed = LocalDate.parse(allowedDate);
                     if (today.getDayOfMonth() != allowed.getDayOfMonth()) {
-                        return Mono.error(new IllegalStateException("Cuentas FIXED_TERM solo permiten movimientos el día "
+                        return Mono.error(new IllegalStateException("Cuentas a Plazo Fijo solo permiten movimientos el día "
                                 + allowed.getDayOfMonth() + " de cada mes"));
                     }
                 }
 
                 tx.setDate(LocalDateTime.now());
-                return repository.save(tx);
+                return repository.save(tx); 
             });
     }
 

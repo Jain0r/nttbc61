@@ -1,10 +1,7 @@
 package com.bootcamp61.customer_service.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import com.bootcamp61.customer_service.event.CustomerCreatedEvent;
 import com.bootcamp61.customer_service.event.CustomerEventPublisher;
 import com.bootcamp61.customer_service.model.Customer;
 import com.bootcamp61.customer_service.repository.CustomerRepository;
