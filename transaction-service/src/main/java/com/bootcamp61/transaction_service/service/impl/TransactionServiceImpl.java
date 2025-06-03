@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
+import com.bootcamp61.transaction_service.event.TransactionPublisher;
 import com.bootcamp61.transaction_service.listener.ProductEventListener;
 import com.bootcamp61.transaction_service.model.Transaction;
 import com.bootcamp61.transaction_service.model.TransactionType;
@@ -22,6 +23,8 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     private final TransactionRepository repository;
+
+    private final TransactionPublisher transactionPublisher;
 
     @Override
     public Mono<Transaction> create(Transaction tx) {
@@ -84,7 +87,7 @@ public class TransactionServiceImpl implements TransactionService {
                 }
 
                 tx.setDate(LocalDateTime.now());
-                return repository.save(tx); 
+                return repository.save(tx).doOnSuccess(txsvd -> transactionPublisher.publishTransactionCreate(txsvd));
             });
     }
 

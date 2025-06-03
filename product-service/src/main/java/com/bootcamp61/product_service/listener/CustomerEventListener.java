@@ -27,7 +27,9 @@ public class CustomerEventListener{
             // log
             customerTypeMap.put(event.getCustomerId(), event.getType());
         } catch (Exception e){
+            
             // log e 
+            //
         }
     }
 }

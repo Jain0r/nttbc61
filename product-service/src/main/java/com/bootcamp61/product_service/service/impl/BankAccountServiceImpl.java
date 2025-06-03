@@ -1,5 +1,9 @@
 package com.bootcamp61.product_service.service.impl;
 
+
+import java.rmi.NoSuchObjectException;
+import java.util.NoSuchElementException;
+
 import org.springframework.stereotype.Service;
 
 import com.bootcamp61.product_service.event.ProductCreatedEvent;
@@ -12,11 +16,13 @@ import com.bootcamp61.product_service.repository.BankAccountRepository;
 import com.bootcamp61.product_service.service.BankAccountService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BankAccountServiceImpl implements BankAccountService {
 
     private final BankAccountRepository repository;
@@ -41,8 +47,8 @@ public class BankAccountServiceImpl implements BankAccountService {
     public Mono<BankAccount> create(BankAccount account) {
         CustomerType type = CustomerEventListener.customerTypeMap.get(account.getCustomerId());
         // CustomerType type = CustomerType.PERSONAL;
-        // if(type == null)
-        //     return Mono.error(new IllegalStateException("Tipo cliente no disponible"));
+        if(type == null)
+            return Mono.error(new IllegalStateException("Tipo cliente no disponible"));
         
         AccountType accountType = account.getAccountType();
 
@@ -70,7 +76,10 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public Mono<BankAccount> update(String id, BankAccount account) {
+        System.out.println("ENTRO A UPDATE");
         return repository.findById(id)
+                         .switchIfEmpty(Mono.error(new NoSuchElementException("Cuenta no encontrada")))
+                         .doOnNext(existign -> log.info("Cuenta encontrada: {}", existign))
                          .flatMap(existing -> {
                             // existing.setCustomerId(id);
                             existing.setAccountType(account.getAccountType());
@@ -80,8 +89,15 @@ public class BankAccountServiceImpl implements BankAccountService {
                             existing.setMaxMonthlyMovements(account.getMaxMonthlyMovements());
                             existing.setMaintenanceFee(account.getMaintenanceFee());
                             return repository.save(existing);
-                         });
+                         })
+                         .doOnSuccess(saved -> log.info("Cuenta actualizada"))
+                         .doOnError(error -> log.error("Error al actualizar cuenta con id: {}: {}", id, error));
     }
+
+    // public Mono<BankAccount> updateBalance(BankAccount account){
+    //     return repository.findById(account.getId())
+    //                      .flatMap(existing)
+    // }
 
     @Override
     public Mono<Void> delete(String id) {

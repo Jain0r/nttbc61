@@ -19,12 +19,13 @@ public class CustomerEventPublisher {
 
     public void publishCustomerCreated(Customer customer){
         try{
-            System.out.println("Se solicito informacion proviente de: xxx");
             CustomerCreatedEvent event = CustomerCreatedEvent.builder()
                                                              .customerId(customer.getId())
                                                              .type(customer.getType())
                                                              .build();
             String message = objectMapper.writeValueAsString(event);
+            log.info("SE REGISTRA POR KAFKA CUSTOMERID :" + customer.getId());
+            
             kafkaTemplate.send(topic, message);
             // log
         } catch (Exception e){
